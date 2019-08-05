@@ -1,0 +1,35 @@
+<div class="sky-tabset">
+  <div
+    role="tablist"
+    [attr.aria-label]="ariaLabel"
+    (keydown)="onKeyDown($event)"
+  >
+    <a *ngFor="let button of tabButtonConfigs; let i = index;"
+      class="sky-tab-button sky-margin-inline-compact"
+      role="tab"
+      [attr.aria-controls]="button.ariaControls"
+      [attr.aria-readonly]="button.disabled"
+      [attr.aria-selected]="button.isActive"
+      [attr.id]="button.id"
+      [attr.tabIndex]="button.tabIndex"
+      [ngClass]="{
+        'sky-tab-button-active': button.isActive
+      }"
+      (click)="onTabClick(i)"
+      (focus)="focusIndex = i"
+      (keyup.enter)="onTabClick(i)"
+    >
+      {{ button.heading }}
+      <button
+        type="button"
+        [attr.tabIndex]="button.tabIndex"
+        (click)="onDeleteButtonClick(i)"
+      >
+        x
+      </button>
+    </a>
+  </div>
+  <div class="sky-tabset-panels">
+    <ng-content></ng-content>
+  </div>
+</div>

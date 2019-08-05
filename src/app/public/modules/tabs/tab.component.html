@@ -1,0 +1,9 @@
+<div
+  role="tabpanel"
+  tabindex="0"
+  [attr.id]="panelId"
+  [attr.aria-labelledby]="buttonId"
+  [hidden]="!isActive || disabled"
+>
+  <ng-content></ng-content>
+</div>
