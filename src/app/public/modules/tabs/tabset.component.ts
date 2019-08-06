@@ -26,15 +26,13 @@ import {
 } from './tab.component';
 
 export interface SkyTabButton {
-  ariaControls: string;
+  buttonId: string;
   disabled: boolean;
   heading: string;
-  id: string;
   isActive: boolean;
+  panelId: string;
   tabIndex: number;
 }
-
-let uniqueId: number = 0;
 
 @Component({
   selector: 'sky-tabset',
@@ -55,6 +53,16 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
 
   @Input()
   public ariaLabel: string;
+
+  @Input()
+  public set urlParam(value: string) {
+    const sanitized = value.toLowerCase().replace(/[\W]/g, '');
+    this._urlParam = `${sanitized}-active-tab`;
+  }
+
+  public get urlParam(): string {
+    return this._urlParam || '';
+  }
 
   public set focusIndex(value: number) {
     const tabButtonElements = this.getFocusableTabElements();
@@ -80,24 +88,18 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
   @ContentChildren(SkyTabComponent, { read: SkyTabComponent })
   private tabComponents: QueryList<SkyTabComponent>;
 
-  private get tabsetId(): string {
-    return `skytabset${this.uniqueId}`;
-  }
-
   private ngUnsubscribe = new Subject<void>();
-  private uniqueId: number;
 
-  private _activeIndex: number = 0;
-  private _focusIndex: number = 0;
+  private _activeIndex: number;
+  private _focusIndex: number;
+  private _urlParam: string;
 
   constructor(
     private activatedRoute: ActivatedRoute,
     private changeDetector: ChangeDetectorRef,
     private elementRef: ElementRef,
     private router: Router
-  ) {
-    this.uniqueId = uniqueId++;
-  }
+  ) { }
 
   public ngAfterContentInit(): void {
     this.tabButtonConfigs = this.parseTabButtons(this.tabComponents);
@@ -154,8 +156,13 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
       return;
     }
 
+    if (!this.urlParam || !found.routerLink) {
+      this.activateTabByIndex(index);
+      return;
+    }
+
     const queryParams: any = {};
-    queryParams[this.tabsetId] = `${found.uniqueId}`;
+    queryParams[this.urlParam] = `${found.routerLink}`;
 
     this.router.navigate([], {
       queryParams,
@@ -165,12 +172,13 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
   }
 
   private activateTabByIndex(index: number): void {
-
     // Set index to zero if the value is out of range.
     const numTabs = this.tabButtonConfigs.length - 1;
     if (index > numTabs || index < 0) {
       index = 0;
     }
+
+    this.activeIndex = index;
 
     this.tabButtonConfigs.forEach((tab, i) => {
       tab.isActive = (i === index);
@@ -182,16 +190,14 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
     });
   }
 
-  private activateTabById(id: number): void {
+  private activateTabByRouterLink(routerLink: string): void {
     let index: number;
 
     this.tabComponents.forEach((tabComponent, i) => {
-      if (tabComponent.uniqueId === id) {
+      if (tabComponent.routerLink === routerLink) {
         index = i;
       }
     });
-
-    this.activeIndex = index;
 
     this.activateTabByIndex(index);
   }
@@ -210,26 +216,25 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
     this.activatedRoute.queryParams
       .takeUntil(this.ngUnsubscribe)
       .subscribe((params) => {
-        const activeTabIdParam: string = params[this.tabsetId];
+        const activeTabIdParam: string = params[this.urlParam];
 
         if (activeTabIdParam === undefined) {
           this.activateTabByIndex(this.activeIndex);
           return;
         }
 
-        const activeTabId: number = parseInt(activeTabIdParam, 10);
-        this.activateTabById(activeTabId);
+        this.activateTabByRouterLink(activeTabIdParam);
       });
   }
 
   private parseTabButtons(tabs: QueryList<SkyTabComponent>): SkyTabButton[] {
     const buttons = tabs.map((tab, i) => {
       return {
-        ariaControls: tab.panelId,
+        buttonId: tab.buttonId,
         disabled: tab.disabled,
         heading: tab.heading,
-        id: tab.buttonId,
         isActive: false,
+        panelId: tab.panelId,
         tabIndex: this.parseTabIndex(i)
       };
     });

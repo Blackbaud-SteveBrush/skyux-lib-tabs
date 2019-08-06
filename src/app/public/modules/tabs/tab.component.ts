@@ -23,15 +23,19 @@ export class SkyTabComponent {
   @Input()
   public heading: string;
 
+  public get routerLink(): string {
+    return this.heading.toLowerCase().replace(/[\W]/g, '');
+  }
+
   @Output()
   public close = new EventEmitter<void>();
 
   public get buttonId(): string {
-    return `sky-tab-button-${this.uniqueId}`;
+    return `sky-tab-button-${this.tabId}`;
   }
 
   public get panelId(): string {
-    return `sky-tab-panel-${this.uniqueId}`;
+    return `sky-tab-panel-${this.tabId}`;
   }
 
   public set isActive(value: boolean) {
@@ -43,16 +47,13 @@ export class SkyTabComponent {
     return this._isActive || false;
   }
 
-  public get uniqueId(): number {
-    return this._uniqueId;
-  }
+  private tabId: number;
 
   private _isActive: boolean = false;
-  private _uniqueId: number;
 
   constructor(
     private changeDetector: ChangeDetectorRef
   ) {
-    this._uniqueId = uniqueId++;
+    this.tabId = uniqueId++;
   }
 }
