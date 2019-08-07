@@ -10,13 +10,12 @@ let uniqueId = 0;
 @Component({
   selector: 'sky-tab',
   templateUrl: './tab.component.html',
-  styleUrls: ['./tab.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SkyTabComponent {
 
   @Input()
-  public isClosable: boolean = false;
+  public isCloseable: boolean = false;
 
   @Input()
   public disabled: boolean = false;

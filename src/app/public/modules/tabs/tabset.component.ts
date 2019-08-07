@@ -1,15 +1,15 @@
 import {
-  AfterContentInit,
+  AfterViewInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   ContentChildren,
   ElementRef,
+  EventEmitter,
   Input,
   OnDestroy,
-  QueryList,
   Output,
-  EventEmitter
+  QueryList
 } from '@angular/core';
 
 import {
@@ -27,16 +27,9 @@ import {
   SkyTabComponent
 } from './tab.component';
 
-export interface SkyTabButton {
-  buttonId: string;
-  disabled: boolean;
-  heading: string;
-  headingCount: number;
-  isActive: boolean;
-  isClosable: boolean;
-  panelId: string;
-  tabIndex: number;
-}
+import {
+  SkyTabButtonConfig
+} from './tab-button-config';
 
 @Component({
   selector: 'sky-tabset',
@@ -44,11 +37,13 @@ export interface SkyTabButton {
   styleUrls: ['./tabset.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
+export class SkyTabsetComponent implements AfterViewInit, OnDestroy {
 
   @Input()
   public set activeIndex(value: number) {
     this._activeIndex = value;
+    this.activateTabByIndex(this.activeIndex);
+    this.changeDetector.markForCheck();
   }
 
   public get activeIndex(): number {
@@ -68,7 +63,13 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
   public activeIndexChange = new EventEmitter<number>();
 
   @Output()
-  public tabClose = new EventEmitter<number>();
+  public closeTab = new EventEmitter<number>();
+
+  @Output()
+  public newTab = new EventEmitter<void>();
+
+  @Output()
+  public openTab = new EventEmitter<void>();
 
   public get queryParam(): string {
     return this._queryParam || '';
@@ -93,7 +94,15 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
     return this._focusIndex || 0;
   }
 
-  public tabButtonConfigs: SkyTabButton[] = [];
+  public get showNewTabButton(): boolean {
+    return (this.newTab.observers.length > 0);
+  }
+
+  public get showOpenTabButton(): boolean {
+    return (this.openTab.observers.length > 0);
+  }
+
+  public tabButtonConfigs: SkyTabButtonConfig[] = [];
 
   @ContentChildren(SkyTabComponent, { read: SkyTabComponent })
   private tabComponents: QueryList<SkyTabComponent>;
@@ -111,16 +120,23 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
     private router: Router
   ) { }
 
-  public ngAfterContentInit(): void {
-    this.tabButtonConfigs = this.parseTabButtons(this.tabComponents);
-    this.watchStructuralChanges();
-    this.watchQueryParamChanges();
+  public ngAfterViewInit(): void {
+    this.tabButtonConfigs = this.parseTabButtonConfigs(this.tabComponents);
+
+    // Let the template render the initial state before watching for changes.
+    setTimeout(() => {
+      this.watchStructuralChanges();
+      this.watchQueryParamChanges();
+    });
   }
 
   public ngOnDestroy(): void {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
     this.activeIndexChange.complete();
+    this.closeTab.complete();
+    this.newTab.complete();
+    this.openTab.complete();
   }
 
   public onKeyDown(event: any): void {
@@ -148,7 +164,15 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
   }
 
   public onCloseButtonClick(index: number): void {
-    this.tabClose.emit(index);
+    this.closeTab.emit(index);
+  }
+
+  public onNewTabButtonClick(): void {
+    this.newTab.emit();
+  }
+
+  public onOpenTabButtonClick(): void {
+    this.openTab.emit();
   }
 
   public onTabClick(index: number): void {
@@ -179,15 +203,18 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
   }
 
   private activateTabByIndex(index: number): void {
-    // Set index to zero if the value is out of range.
-    const numTabs = this.tabButtonConfigs.length - 1;
-    if (index > numTabs || index < 0) {
-      index = 0;
+    if (!this.tabButtonConfigs || !this.tabComponents) {
+      return;
     }
 
-    if (this._activeIndex !== index) {
-      this.activeIndex = index;
-      this.activeIndexChange.emit(this.activeIndex);
+    const found = this.tabButtonConfigs.find((config, i) => {
+      return (i === index && config.disabled === false);
+    });
+
+    if (!found) {
+      this.tabButtonConfigs.forEach(t => t.isActive = false);
+      this.tabComponents.forEach(t => t.isActive = false);
+      return;
     }
 
     this.tabButtonConfigs.forEach((tab, i) => {
@@ -198,6 +225,12 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
     this.tabComponents.forEach((tabComponent, i) => {
       tabComponent.isActive = (i === index);
     });
+
+    // Store the active index for later.
+    if (this._activeIndex !== index) {
+      this.activeIndex = index;
+      this.activeIndexChange.emit(this.activeIndex);
+    }
   }
 
   private activateTabByQueryParam(routerLink: string): void {
@@ -216,9 +249,13 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
     this.tabComponents.changes
       .takeUntil(this.ngUnsubscribe)
       .subscribe((tabs) => {
-        this.tabButtonConfigs = this.parseTabButtons(tabs);
-        this.activateTabByIndex(this.activeIndex);
-        this.changeDetector.markForCheck();
+        this.tabButtonConfigs = this.parseTabButtonConfigs(tabs);
+
+        // Wait for the template to rebuild the tabs before updating the active index.
+        setTimeout(() => {
+          this.activateTabByIndex(this.activeIndex);
+          this.changeDetector.markForCheck();
+        });
       });
   }
 
@@ -230,15 +267,17 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
 
         if (activeTabsetParam === undefined) {
           this.activateTabByIndex(this.activeIndex);
+          this.changeDetector.markForCheck();
           return;
         }
 
         this.activateTabByQueryParam(activeTabsetParam);
+        this.changeDetector.markForCheck();
       });
   }
 
-  private parseTabButtons(tabs: QueryList<SkyTabComponent>): SkyTabButton[] {
-    const buttons = tabs.map((tab, i) => {
+  private parseTabButtonConfigs(tabs: QueryList<SkyTabComponent>): SkyTabButtonConfig[] {
+    return tabs.map((tab, i) => {
 
       const headingCount = (
         tab.headingCount !== undefined &&
@@ -251,24 +290,20 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
         heading: tab.heading,
         headingCount,
         isActive: false,
-        isClosable: tab.isClosable,
+        isCloseable: tab.isCloseable,
         panelId: tab.panelId,
         tabIndex: this.parseTabIndex(i)
       };
     });
-
-    return buttons;
   }
 
   private parseTabIndex(index: number): number {
     const tabIndex = (index === this.activeIndex) ? 0 : -1;
-
     return tabIndex;
   }
 
   private getFocusableTabElements(): QueryList<any> {
     const elements = this.elementRef.nativeElement.querySelectorAll('.sky-tab-button');
-
     return elements;
   }
 

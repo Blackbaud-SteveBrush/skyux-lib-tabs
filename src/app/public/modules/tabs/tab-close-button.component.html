@@ -1,12 +1,18 @@
 <button
-  class="sky-btn"
+  class="sky-btn-tab-close"
   type="button"
-  [attr.aria-hidden]="!isCloseButtonFocused"
+  [attr.aria-hidden]="!isFocused"
   [attr.tabIndex]="tabIndex"
-  [attr.title]="'sky_tab_close_button_label' | skyLibResources"
+  [attr.title]="'skyux_tab_close_button_label' | skyLibResources"
   [disabled]="disabled"
-  (blur)="onCloseButtonBlur()"
-  (focus)="onCloseButtonFocus()"
+  [ngClass]="{
+    'sky-btn-tab-close-disabled': disabled
+  }"
+  (blur)="onBlur()"
+  (click)="onClick()"
+  (focus)="onFocus()"
 >
-  <sky-icon icon="times"></sky-icon>
+  <sky-icon
+    icon="remove"
+  ></sky-icon>
 </button>

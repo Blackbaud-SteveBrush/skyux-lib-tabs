@@ -1,40 +1,71 @@
 <div class="sky-tabset">
-  <div
-    role="tablist"
-    [attr.aria-label]="ariaLabel"
-    (keydown)="onKeyDown($event)"
-  >
-    <a *ngFor="let button of tabButtonConfigs; let i = index;"
-      class="sky-tab-button sky-margin-inline-compact"
-      role="tab"
-      [attr.aria-controls]="button.panelId"
-      [attr.aria-readonly]="button.disabled"
-      [attr.aria-selected]="button.isActive"
-      [attr.id]="button.buttonId"
-      [attr.tabIndex]="button.tabIndex"
-      [ngClass]="{
-        'sky-tab-button-active': button.isActive,
-        'sky-tab-button-disabled': button.disabled
-      }"
-      (click)="onTabClick(i)"
-      (focus)="focusIndex = i"
-      (keyup.enter)="onTabClick(i)"
+  <div class="sky-tabset-header">
+
+    <div class="sky-tabset-utility-controls">
+      <button *ngIf="showNewTabButton"
+        class="sky-btn sky-btn-default sky-margin-inline-compact"
+        type="button"
+        [attr.title]="'skyux_tabset_new_button_label' | skyLibResources"
+        (click)="onNewTabButtonClick()"
+      >
+        <sky-icon
+          icon="plus-circle"
+          size="lg"
+        ></sky-icon>
+      </button>
+      <button *ngIf="showOpenTabButton"
+        class="sky-btn sky-btn-default"
+        type="button"
+        [attr.title]="'skyux_tabset_open_button_label' | skyLibResources"
+        (click)="onOpenTabButtonClick()"
+      >
+        <sky-icon
+          icon="folder-open-o"
+          size="lg"
+        ></sky-icon>
+      </button>
+    </div>
+
+    <div
+      class="sky-tabset-tablist sky-margin-inline-compact"
+      role="tablist"
+      [attr.aria-label]="ariaLabel"
+      (keydown)="onKeyDown($event)"
     >
-      <span
-        class="sky-tab-button-heading"
-      >{{ button.heading }}</span>
+      <a *ngFor="let button of tabButtonConfigs; let i = index;"
+        class="sky-btn-tab sky-margin-inline-compact"
+        role="tab"
+        [attr.aria-controls]="button.panelId"
+        [attr.aria-readonly]="button.disabled"
+        [attr.aria-selected]="button.isActive"
+        [attr.id]="button.buttonId"
+        [attr.tabIndex]="button.tabIndex"
+        [ngClass]="{
+          'sky-tab-btn-closeable': button.isCloseable,
+          'sky-btn-tab-disabled': button.disabled,
+          'sky-btn-tab-selected': button.isActive
+        }"
+        (click)="onTabClick(i)"
+        (focus)="focusIndex = i"
+        (keyup.enter)="onTabClick(i)"
+      >
+        <span
+          class="sky-tab-button-heading"
+        >{{ button.heading }}</span>
 
-      <span *ngIf="button.headingCount !== undefined"
-        class="sky-tab-button-heading-count"
-      >&nbsp;{{ button.headingCount }}</span>
+        <span *ngIf="button.headingCount !== undefined"
+          class="sky-tab-header-count"
+        >&nbsp;{{ button.headingCount }}</span>
 
-      <sky-tab-close-button *ngIf="button.isClosable"
-        [disabled]="button.disabled"
-        [tabIndex]="button.tabIndex"
-        (click)="onCloseButtonClick(i)"
-      ></sky-tab-close-button>
-    </a>
+        <sky-tab-close-button *ngIf="button.isCloseable"
+          [disabled]="button.disabled"
+          [tabIndex]="button.tabIndex"
+          (close)="onCloseButtonClick(i)"
+        ></sky-tab-close-button>
+      </a>
+    </div>
   </div>
+
   <div class="sky-tabset-panels">
     <ng-content></ng-content>
   </div>

@@ -1,7 +1,10 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  Input
+  EventEmitter,
+  Input,
+  OnDestroy,
+  Output
 } from '@angular/core';
 
 @Component({
@@ -9,26 +12,37 @@ import {
   templateUrl: './tab-close-button.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SkyTabCloseButtonComponent {
+export class SkyTabCloseButtonComponent implements OnDestroy {
 
   @Input()
-  public disabled = false;
+  public disabled: boolean = false;
 
   @Input()
   public tabIndex: number = -1;
+
+  @Output()
+  public close = new EventEmitter<void>();
 
   /**
    * Prevents screen readers from reading out the "Close button"
    * label when the tab is focused.
    * @ignore
    */
-  public isCloseButtonFocused = false;
+  public isFocused: boolean = false;
 
-  public onCloseButtonBlur(): void {
-    this.isCloseButtonFocused = false;
+  public ngOnDestroy(): void {
+    this.close.complete();
   }
 
-  public onCloseButtonFocus(): void {
-    this.isCloseButtonFocused = true;
+  public onBlur(): void {
+    this.isFocused = false;
+  }
+
+  public onClick(): void {
+    this.close.emit();
+  }
+
+  public onFocus(): void {
+    this.isFocused = true;
   }
 }

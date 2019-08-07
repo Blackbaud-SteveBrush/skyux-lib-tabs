@@ -1,11 +1,22 @@
-.sky-tab-button-active {
-  color: red;
+@import "~@skyux/theme/scss/mixins";
+@import "~@skyux/theme/scss/_compat/mixins";
+
+.sky-tabset-header {
+  border-bottom: 2px solid $sky-background-color-primary-dark;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
 }
 
-.sky-tab-button {
-  cursor: pointer;
+.sky-tabset-tablist {
+  flex: 0 0 auto;
+  align-self: flex-start;
+}
 
-  &.sky-tab-button-disabled {
-    cursor: default;
+.sky-tabset-utility-controls {
+  flex: 1 1 auto;
+
+  button {
+    color: $sky-text-color-action-primary;
   }
 }

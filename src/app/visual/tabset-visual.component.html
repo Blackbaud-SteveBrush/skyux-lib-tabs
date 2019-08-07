@@ -1,27 +1,19 @@
 <sky-tabset
   ariaLabel="Sample tabs"
   queryParam="sample"
-  [activeIndex]="2"
+  [activeIndex]="activeIndex"
   (activeIndexChange)="onActiveIndexChange($event)"
-  (tabClose)="onTabClose($event)"
+  (closeTab)="onCloseTab($event)"
+  (newTab)="onNewTab()"
+  (openTab)="onOpenTab()"
 >
-  <sky-tab
-    heading="Tab 1"
-    headingCount="42"
-    [disabled]="true"
+  <sky-tab *ngFor="let tab of tabConfigs"
+    [disabled]="tab.disabled"
+    [heading]="tab.heading"
+    [headingCount]="tab.headingCount"
+    [isCloseable]="tab.isCloseable"
   >
-    Tab 1 content.
-  </sky-tab>
-  <sky-tab
-    heading="Of Mice & Men"
-  >
-    Tab 2 content.
-  </sky-tab>
-  <sky-tab
-    heading="Questions?"
-    [isClosable]="true"
-  >
-    Tab 3 content.
+    {{ tab.content }}
   </sky-tab>
 </sky-tabset>
 

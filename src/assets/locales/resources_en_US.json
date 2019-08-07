@@ -1,6 +1,14 @@
 {
-  "sky_tab_close_button_label": {
+  "skyux_tab_close_button_label": {
     "_description": "Accessibility label for tab close button.",
     "message": "Close this tab"
+  },
+  "skyux_tabset_open_button_label": {
+    "_description": "Label for the tabset Open button.",
+    "message": "Open a tab"
+  },
+  "skyux_tabset_new_button_label": {
+    "_description": "Label for the tabset New button.",
+    "message": "Create a new tab"
   }
 }
