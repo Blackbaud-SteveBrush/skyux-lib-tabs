@@ -2,9 +2,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  EventEmitter,
-  Input,
-  Output
+  Input
 } from '@angular/core';
 
 let uniqueId = 0;
@@ -18,17 +16,20 @@ let uniqueId = 0;
 export class SkyTabComponent {
 
   @Input()
+  public isClosable: boolean = false;
+
+  @Input()
   public disabled: boolean = false;
 
   @Input()
   public heading: string;
 
+  @Input()
+  public headingCount: string | number;
+
   public get routerLink(): string {
     return this.heading.toLowerCase().replace(/[\W]/g, '');
   }
-
-  @Output()
-  public close = new EventEmitter<void>();
 
   public get buttonId(): string {
     return `sky-tab-button-${this.tabId}`;

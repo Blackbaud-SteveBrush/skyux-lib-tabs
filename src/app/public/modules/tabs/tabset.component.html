@@ -13,20 +13,26 @@
       [attr.id]="button.buttonId"
       [attr.tabIndex]="button.tabIndex"
       [ngClass]="{
-        'sky-tab-button-active': button.isActive
+        'sky-tab-button-active': button.isActive,
+        'sky-tab-button-disabled': button.disabled
       }"
       (click)="onTabClick(i)"
       (focus)="focusIndex = i"
       (keyup.enter)="onTabClick(i)"
     >
-      {{ button.heading }}
-      <button
-        type="button"
-        [attr.tabIndex]="button.tabIndex"
-        (click)="onDeleteButtonClick(i)"
-      >
-        x
-      </button>
+      <span
+        class="sky-tab-button-heading"
+      >{{ button.heading }}</span>
+
+      <span *ngIf="button.headingCount !== undefined"
+        class="sky-tab-button-heading-count"
+      >&nbsp;{{ button.headingCount }}</span>
+
+      <sky-tab-close-button *ngIf="button.isClosable"
+        [disabled]="button.disabled"
+        [tabIndex]="button.tabIndex"
+        (click)="onCloseButtonClick(i)"
+      ></sky-tab-close-button>
     </a>
   </div>
   <div class="sky-tabset-panels">

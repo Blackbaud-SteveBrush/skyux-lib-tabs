@@ -11,8 +11,16 @@ import {
 } from '@angular/router';
 
 import {
+  SkyIconModule
+} from '@skyux/indicators';
+
+import {
   SkyTabsResourcesModule
 } from '../shared/tabs-resources.module';
+
+import {
+  SkyTabCloseButtonComponent
+} from './tab-close-button.component';
 
 import {
   SkyTabComponent
@@ -24,12 +32,14 @@ import {
 
 @NgModule({
   declarations: [
+    SkyTabCloseButtonComponent,
     SkyTabComponent,
     SkyTabsetComponent
   ],
   imports: [
     CommonModule,
     RouterModule,
+    SkyIconModule,
     SkyTabsResourcesModule
   ],
   exports: [

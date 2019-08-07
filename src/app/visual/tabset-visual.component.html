@@ -1,0 +1,30 @@
+<sky-tabset
+  ariaLabel="Sample tabs"
+  queryParam="sample"
+  [activeIndex]="2"
+  (activeIndexChange)="onActiveIndexChange($event)"
+  (tabClose)="onTabClose($event)"
+>
+  <sky-tab
+    heading="Tab 1"
+    headingCount="42"
+    [disabled]="true"
+  >
+    Tab 1 content.
+  </sky-tab>
+  <sky-tab
+    heading="Of Mice & Men"
+  >
+    Tab 2 content.
+  </sky-tab>
+  <sky-tab
+    heading="Questions?"
+    [isClosable]="true"
+  >
+    Tab 3 content.
+  </sky-tab>
+</sky-tabset>
+
+<p>
+  <a skyAppLink="/dummy">Dummy route</a>
+</p>

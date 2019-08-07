@@ -7,7 +7,9 @@ import {
   ElementRef,
   Input,
   OnDestroy,
-  QueryList
+  QueryList,
+  Output,
+  EventEmitter
 } from '@angular/core';
 
 import {
@@ -29,7 +31,9 @@ export interface SkyTabButton {
   buttonId: string;
   disabled: boolean;
   heading: string;
+  headingCount: number;
   isActive: boolean;
+  isClosable: boolean;
   panelId: string;
   tabIndex: number;
 }
@@ -55,13 +59,19 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
   public ariaLabel: string;
 
   @Input()
-  public set urlParam(value: string) {
+  public set queryParam(value: string) {
     const sanitized = value.toLowerCase().replace(/[\W]/g, '');
-    this._urlParam = `${sanitized}-active-tab`;
+    this._queryParam = `${sanitized}-active-tab`;
   }
 
-  public get urlParam(): string {
-    return this._urlParam || '';
+  @Output()
+  public activeIndexChange = new EventEmitter<number>();
+
+  @Output()
+  public tabClose = new EventEmitter<number>();
+
+  public get queryParam(): string {
+    return this._queryParam || '';
   }
 
   public set focusIndex(value: number) {
@@ -92,7 +102,7 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
 
   private _activeIndex: number;
   private _focusIndex: number;
-  private _urlParam: string;
+  private _queryParam: string;
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -110,6 +120,7 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
   public ngOnDestroy(): void {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
+    this.activeIndexChange.complete();
   }
 
   public onKeyDown(event: any): void {
@@ -136,12 +147,8 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
     });
   }
 
-  public onDeleteButtonClick(index: number): void {
-    const found = this.tabComponents.find((t, i) => {
-      return (i === index);
-    });
-
-    found.close.emit();
+  public onCloseButtonClick(index: number): void {
+    this.tabClose.emit(index);
   }
 
   public onTabClick(index: number): void {
@@ -156,13 +163,13 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
       return;
     }
 
-    if (!this.urlParam || !found.routerLink) {
+    if (!this.queryParam || !found.routerLink) {
       this.activateTabByIndex(index);
       return;
     }
 
     const queryParams: any = {};
-    queryParams[this.urlParam] = `${found.routerLink}`;
+    queryParams[this.queryParam] = `${found.routerLink}`;
 
     this.router.navigate([], {
       queryParams,
@@ -178,7 +185,10 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
       index = 0;
     }
 
-    this.activeIndex = index;
+    if (this._activeIndex !== index) {
+      this.activeIndex = index;
+      this.activeIndexChange.emit(this.activeIndex);
+    }
 
     this.tabButtonConfigs.forEach((tab, i) => {
       tab.isActive = (i === index);
@@ -190,7 +200,7 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
     });
   }
 
-  private activateTabByRouterLink(routerLink: string): void {
+  private activateTabByQueryParam(routerLink: string): void {
     let index: number;
 
     this.tabComponents.forEach((tabComponent, i) => {
@@ -216,24 +226,32 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
     this.activatedRoute.queryParams
       .takeUntil(this.ngUnsubscribe)
       .subscribe((params) => {
-        const activeTabIdParam: string = params[this.urlParam];
+        const activeTabsetParam: string = params[this.queryParam];
 
-        if (activeTabIdParam === undefined) {
+        if (activeTabsetParam === undefined) {
           this.activateTabByIndex(this.activeIndex);
           return;
         }
 
-        this.activateTabByRouterLink(activeTabIdParam);
+        this.activateTabByQueryParam(activeTabsetParam);
       });
   }
 
   private parseTabButtons(tabs: QueryList<SkyTabComponent>): SkyTabButton[] {
     const buttons = tabs.map((tab, i) => {
+
+      const headingCount = (
+        tab.headingCount !== undefined &&
+        typeof tab.headingCount === 'string'
+      ) ? parseInt(tab.headingCount, 10) : tab.headingCount as number;
+
       return {
         buttonId: tab.buttonId,
         disabled: tab.disabled,
         heading: tab.heading,
+        headingCount,
         isActive: false,
+        isClosable: tab.isClosable,
         panelId: tab.panelId,
         tabIndex: this.parseTabIndex(i)
       };

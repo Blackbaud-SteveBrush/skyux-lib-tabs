@@ -1,6 +1,6 @@
 {
-  "my_lib_sample_greeting": {
-    "_description": "A simple greeting.",
-    "message": "Hello"
+  "sky_tab_close_button_label": {
+    "_description": "Accessibility label for tab close button.",
+    "message": "Close this tab"
   }
 }

@@ -1,3 +1,11 @@
 .sky-tab-button-active {
   color: red;
 }
+
+.sky-tab-button {
+  cursor: pointer;
+
+  &.sky-tab-button-disabled {
+    cursor: default;
+  }
+}
