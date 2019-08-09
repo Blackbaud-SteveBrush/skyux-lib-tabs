@@ -1,5 +1,5 @@
 import {
-  AfterViewInit,
+  AfterContentInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
@@ -37,7 +37,7 @@ import {
   styleUrls: ['./tabset.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SkyTabsetComponent implements AfterViewInit, OnDestroy {
+export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
 
   @Input()
   public set activeIndex(value: number) {
@@ -55,8 +55,16 @@ export class SkyTabsetComponent implements AfterViewInit, OnDestroy {
 
   @Input()
   public set queryParam(value: string) {
+    if (!value) {
+      return;
+    }
+
     const sanitized = value.toLowerCase().replace(/[\W]/g, '');
     this._queryParam = `${sanitized}-active-tab`;
+  }
+
+  public get queryParam(): string {
+    return this._queryParam || '';
   }
 
   @Output()
@@ -70,10 +78,6 @@ export class SkyTabsetComponent implements AfterViewInit, OnDestroy {
 
   @Output()
   public openTab = new EventEmitter<void>();
-
-  public get queryParam(): string {
-    return this._queryParam || '';
-  }
 
   public set focusIndex(value: number) {
     const tabButtonElements = this.getFocusableTabElements();
@@ -110,7 +114,9 @@ export class SkyTabsetComponent implements AfterViewInit, OnDestroy {
   private ngUnsubscribe = new Subject<void>();
 
   private _activeIndex: number;
+
   private _focusIndex: number;
+
   private _queryParam: string;
 
   constructor(
@@ -120,11 +126,12 @@ export class SkyTabsetComponent implements AfterViewInit, OnDestroy {
     private router: Router
   ) { }
 
-  public ngAfterViewInit(): void {
+  public ngAfterContentInit(): void {
     this.tabButtonConfigs = this.parseTabButtonConfigs(this.tabComponents);
 
     // Let the template render the initial state before watching for changes.
     setTimeout(() => {
+      this.activateTabByIndex(this.activeIndex);
       this.watchStructuralChanges();
       this.watchQueryParamChanges();
     });
@@ -187,13 +194,13 @@ export class SkyTabsetComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    if (!this.queryParam || !found.routerLink) {
+    if (!this.queryParam) {
       this.activateTabByIndex(index);
       return;
     }
 
     const queryParams: any = {};
-    queryParams[this.queryParam] = `${found.routerLink}`;
+    queryParams[this.queryParam] = `${found.queryParamValue}`;
 
     this.router.navigate([], {
       queryParams,
@@ -231,13 +238,14 @@ export class SkyTabsetComponent implements AfterViewInit, OnDestroy {
       this.activeIndex = index;
       this.activeIndexChange.emit(this.activeIndex);
     }
+
+    this.changeDetector.markForCheck();
   }
 
-  private activateTabByQueryParam(routerLink: string): void {
+  private activateTabByKey(key: string): void {
     let index: number;
-
     this.tabComponents.forEach((tabComponent, i) => {
-      if (tabComponent.routerLink === routerLink) {
+      if (tabComponent.queryParamValue === key) {
         index = i;
       }
     });
@@ -250,11 +258,9 @@ export class SkyTabsetComponent implements AfterViewInit, OnDestroy {
       .takeUntil(this.ngUnsubscribe)
       .subscribe((tabs) => {
         this.tabButtonConfigs = this.parseTabButtonConfigs(tabs);
-
         // Wait for the template to rebuild the tabs before updating the active index.
         setTimeout(() => {
           this.activateTabByIndex(this.activeIndex);
-          this.changeDetector.markForCheck();
         });
       });
   }
@@ -263,16 +269,10 @@ export class SkyTabsetComponent implements AfterViewInit, OnDestroy {
     this.activatedRoute.queryParams
       .takeUntil(this.ngUnsubscribe)
       .subscribe((params) => {
-        const activeTabsetParam: string = params[this.queryParam];
-
-        if (activeTabsetParam === undefined) {
-          this.activateTabByIndex(this.activeIndex);
-          this.changeDetector.markForCheck();
-          return;
+        const key = params[this.queryParam];
+        if (key) {
+          this.activateTabByKey(key);
         }
-
-        this.activateTabByQueryParam(activeTabsetParam);
-        this.changeDetector.markForCheck();
       });
   }
 

@@ -18,7 +18,13 @@ export class SkyTabComponent {
   public isCloseable: boolean = false;
 
   @Input()
-  public disabled: boolean = false;
+  public set disabled(value: boolean) {
+    this._disabled = value;
+  }
+
+  public get disabled(): boolean {
+    return this._disabled || false;
+  }
 
   @Input()
   public heading: string;
@@ -26,8 +32,13 @@ export class SkyTabComponent {
   @Input()
   public headingCount: string | number;
 
-  public get routerLink(): string {
-    return this.heading.toLowerCase().replace(/[\W]/g, '');
+  @Input()
+  public set queryParamValue(value: string) {
+    this._queryParamValue = this.sanitizeKey(value);
+  }
+
+  public get queryParamValue(): string {
+    return this._queryParamValue || this.sanitizeKey(this.heading);
   }
 
   public get buttonId(): string {
@@ -49,11 +60,34 @@ export class SkyTabComponent {
 
   private tabId: number;
 
+  private _disabled: boolean = false;
+
   private _isActive: boolean = false;
+
+  private _queryParamValue: string;
 
   constructor(
     private changeDetector: ChangeDetectorRef
   ) {
     this.tabId = uniqueId++;
+  }
+
+  private sanitizeKey(value: string): string {
+    if (!value) {
+      return;
+    }
+
+    const sanitized = value.toLowerCase()
+
+      // Remove special characters.
+      .replace(/[\_\~\`\@\!\#\$\%\^\&\*\(\)\[\]\{\}\;\:\'\/\\\<\>\,\.\?\=\+\|"]/g, '')
+
+      // Replace space characters with a dash.
+      .replace(/\s/g, '-')
+
+      // Remove any double-dashes.
+      .replace(/--/g, '-');
+
+    return sanitized;
   }
 }

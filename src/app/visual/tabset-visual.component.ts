@@ -12,21 +12,19 @@ export class TabsetVisualComponent {
 
   public tabConfigs: {
     content: string;
-    disabled: boolean;
     heading: string;
+    disabled?: boolean;
     headingCount?: number;
-    isCloseable: boolean;
+    isCloseable?: boolean;
+    queryParamValue?: string;
   }[] = [
     {
       content: 'Tab 1 content.',
-      disabled: false,
       heading: 'Tab 1',
-      headingCount: 45,
-      isCloseable: false
+      headingCount: 45
     },
     {
       content: 'Tab 2 content.',
-      disabled: false,
       heading: 'Of Mice & Men',
       headingCount: 0,
       isCloseable: true
@@ -35,8 +33,13 @@ export class TabsetVisualComponent {
       content: 'Tab 3 content.',
       disabled: true,
       heading: 'Questions?',
-      headingCount: undefined,
       isCloseable: true
+    },
+    {
+      content: 'Duplicate tab content.',
+      heading: 'Tab 1',
+      isCloseable: true,
+      queryParamValue: 'foobar'
     }
   ];
 
@@ -61,7 +64,7 @@ export class TabsetVisualComponent {
   }
 
   public onCloseTab(value: any): void {
-    console.log('Close clicked for:', value);
+    this.tabConfigs.splice(value, 1);
   }
 
   public onNewTab(): void {
