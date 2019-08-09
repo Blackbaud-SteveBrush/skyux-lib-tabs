@@ -194,7 +194,7 @@ export class SkyTabsetComponent implements AfterContentInit, OnDestroy {
       return;
     }
 
-    if (!this.queryParam) {
+    if (!this.queryParam || !found.queryParamValue) {
       this.activateTabByIndex(index);
       return;
     }
